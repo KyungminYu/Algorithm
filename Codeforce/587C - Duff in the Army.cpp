@@ -10,7 +10,7 @@ vector<int> tree[MAXN], c[MAXN], city[MAXN][20], self[MAXN], uVec, vVec, tmp, an
 void dfs(int v, int pre, int d){
 	depth[v] = d;
 	parent[v][0] = pre;
-	for(int i = 0; i < 10 && i < c[v].size(); i++) city[v][0].push_back(c[v][i]);
+	//for(int i = 0; i < 10 && i < c[v].size(); i++) city[v][0].push_back(c[v][i]);
 	for(int i = 0; i < tree[v].size(); i++){
 		int nxt = tree[v][i];
 		if(nxt == pre) continue;
@@ -75,41 +75,27 @@ int main(){
 	}
 	for(int i = 1; i <= m; i++) {
 		scanf("%d", &t);
-		if(c[t].size() > 10) continue; 
-		c[t].push_back(i);
+		if(city[v][0].size() > 10) continue; 
+		city[v][0].push_back(i);
 	}
 	dfs(1, -1, 0);
 	for(int i = 1; i < 20; i++){
         for(int j = 1; j <= n; j++){  
         	int root = parent[j][i - 1];
             if(root == -1) parent[j][i] = -1;
-            else parent[j][i] = parent[root][i - 1];
+            else {
+            	parent[j][i] = parent[root][i - 1];
+            	city[j][i] = merge(city[j][i - 1], city[root][i - 1], 10);
+        	}
         }
     }
-
-	for(int i = 1; i < 20; i++){
-        for(int j = 1; j <= n; j++){  
-        	int root = parent[j][i - 1];
-            if(root == -1) parent[j][i] = -1;
-            else parent[j][i] = parent[root][i - 1];
-        }
-    }
-
-	for(int i = 1; i < 20; i++){
-        for(int j = 1; j <= n; j++){  
-        	int root = parent[j][i - 1];
-            if(root == -1) continue;
-            else city[j][i] = merge(city[j][i - 1], city[root][i - 1], 10);
-        }
-    }
-
     for(int i = 0; i < q; i++){
 		scanf("%d %d %d", &u, &v, &a);
 		int lca = getLCA(u, v);
 		uVec = kth(u, depth[u] - depth[lca], a);
 		vVec = kth(v, depth[v] - depth[lca], a);
 		tmp = merge(uVec, vVec, a);
-		ans = merge(tmp, c[lca], a);
+		ans = merge(tmp, city[lca][0], a);
 	
 		printf("%d ", ans.size());
 		for(int j = 0; j < ans.size(); j++) printf("%d ", ans[j]);

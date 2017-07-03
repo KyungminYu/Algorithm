@@ -21,7 +21,7 @@ int main(){
 		G[u].push_back(v);
 		G[v].push_back(u);
 	}
-
+	//DFS를 이용해서 CC를 찾는다.
 	int ans = 0;
 	for(int i = 1; i <= n; i++){
 		if(chk[i]) continue;
