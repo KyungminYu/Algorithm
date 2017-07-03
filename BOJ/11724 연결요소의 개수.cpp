@@ -3,28 +3,32 @@
 using namespace std;
 
 vector<int> G[1001];
-int visit[1001];
+int chk[1001];
+
 void dfs(int v){
-	visit[v] = 1;
-	for (int i = 0; i < G[v].size(); i++){
-		if (visit[G[v][i]] == 0) 
-			dfs(G[v][i]);
+	chk[v] = 1;
+	for(int i = 0; i < G[v].size(); i++){
+		int nxt = G[v][i];
+		if(chk[nxt]) continue;
+		dfs(nxt);
 	}
 }
 int main(){
-	int N, M, u, v, cnt = 0;
-	scanf("%d %d", &N, &M);
-	for (int i = 0; i < M; i++){
+	int n, m, u, v;
+	scanf("%d %d", &n, &m);
+	for(int i = 0; i < m; i++){
 		scanf("%d %d", &u, &v);
 		G[u].push_back(v);
 		G[v].push_back(u);
 	}
-	for (int i = 1; i <= N; i++){
-		if (visit[i] == 0) {
-			dfs(i);
-			cnt++;
-		}
+
+	int ans = 0;
+	for(int i = 1; i <= n; i++){
+		if(chk[i]) continue;
+		ans++;
+		dfs(i);
 	}
-	printf("%d\n", cnt);
+
+	printf("%d\n", ans);
 	return 0;
 }
