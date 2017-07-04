@@ -10,7 +10,7 @@ vector<int> tree[MAXN], c[MAXN], city[MAXN][20], self[MAXN], uVec, vVec, tmp, an
 void dfs(int v, int pre, int d){
 	depth[v] = d;
 	parent[v][0] = pre;
-	//for(int i = 0; i < 10 && i < c[v].size(); i++) city[v][0].push_back(c[v][i]);
+	for(int i = 0; i < 10 && i < c[v].size(); i++) city[v][0].push_back(c[v][i]);
 	for(int i = 0; i < tree[v].size(); i++){
 		int nxt = tree[v][i];
 		if(nxt == pre) continue;
@@ -75,8 +75,8 @@ int main(){
 	}
 	for(int i = 1; i <= m; i++) {
 		scanf("%d", &t);
-		if(city[v][0].size() > 10) continue; 
-		city[v][0].push_back(i);
+		if(c[t].size() > 10) continue; 
+		c[t].push_back(i);
 	}
 	dfs(1, -1, 0);
 	for(int i = 1; i < 20; i++){
@@ -95,7 +95,7 @@ int main(){
 		uVec = kth(u, depth[u] - depth[lca], a);
 		vVec = kth(v, depth[v] - depth[lca], a);
 		tmp = merge(uVec, vVec, a);
-		ans = merge(tmp, city[lca][0], a);
+		ans = merge(tmp, c[lca], a);
 	
 		printf("%d ", ans.size());
 		for(int j = 0; j < ans.size(); j++) printf("%d ", ans[j]);
