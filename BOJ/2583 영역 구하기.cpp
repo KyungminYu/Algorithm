@@ -2,6 +2,15 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
+
+/*
+일반적인 DFS가 아니라 격자상에서 DFS를 사용할 수 있는 문제
+DFS시 방문 여부 뿐 아니라 격자를 벗어나는지 체크해야함
+DFS함수의 반환형이 void가 아니라 int형으로 1회 DFS했을 때 탐색한 vertex 수를 반환 하게 함
+
+격자 문제에서는 x, y혹은 row, col의 순서를 잘 확인하고 코딩해야 함
+*/
+
 int map[101][101];
 int dx[] = { 0, 0, 1, -1 };
 int dy[] = { 1, -1, 0, 0 };
