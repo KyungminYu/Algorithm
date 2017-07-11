@@ -5,11 +5,9 @@ using namespace std;
 
 const long long MOD = 1000000007LL;
 vector<int> tree[51];
-int chk[51];
 int size[51];
 long long dp[51][51];
 long long tdp[51];
-long long ans;
 void dfs(int v, int pre){
     dp[v][1] = 1;
     for(int i = 0; i < tree[v].size(); i++){
@@ -40,6 +38,7 @@ int main(){
     }
     for(int i = 1; i <= n; i++) size[i] = 1;
     dfs(1, -1);
+    int ans = 0;
     for(int i = 1; i <= n; i++){
         ans += dp[i][k];
         ans %= MOD;
