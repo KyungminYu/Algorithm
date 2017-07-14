@@ -7,7 +7,6 @@ const long long INF = 1e17;
 typedef struct{
     long long pos, dur, Cost, type;
 }voucher;
-
 vector<voucher> v;
 long long minCost[200005];
 long long ans;
@@ -31,6 +30,6 @@ int main(){
         if(v[i].type) minCost[v[i].dur] = min(minCost[v[i].dur], v[i].Cost);
         else if(0 < x - v[i].dur) ans = min(ans, minCost[x - v[i].dur] + v[i].Cost);
     }
-    printf("%lld\n", ans == INF ? -1LL : ans);
+    printf("%lld\n", ans == INF ? -1LL : ans); 
     return 0;
 }
