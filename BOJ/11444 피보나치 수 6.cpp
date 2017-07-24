@@ -2,7 +2,8 @@
 #include <vector>
 using namespace std;
 
-typedef vector<vector<long long> > matrix;
+//typedef vector<vector<long long> > matrix;
+#define matrix vector<vector<long long> >
 const long long MOD = 1000000007;
 matrix unit(long long n){
     matrix ret(n, vector<long long>(n));
@@ -24,10 +25,20 @@ matrix multi(const matrix &a, const matrix &b){
     }
     return ret;
 }
+
 matrix power(const matrix &a, long long p){
-    if (p  ==  0) return unit(a.size()); 
-    if (p & 1) return multi(a,  power(a,  p - 1)); 
-    return power(multi(a,  a),  p / 2); 
+    matrix ret = unit(a.size());
+    matrix tmp = a;
+    long long i = 0;
+    while(p){
+        if(p & (1LL << i)){
+            p -= (1LL << i);
+            ret = multi(ret, tmp);
+        }
+        i++;
+        tmp = multi(tmp, tmp);
+    }
+    return ret;
 }
 
 int main(){
