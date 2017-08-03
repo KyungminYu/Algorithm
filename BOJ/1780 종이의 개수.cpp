@@ -1,37 +1,35 @@
 #include <stdio.h>
+#include <vector>
 using namespace std;
 
-int M[2200][2200];
-int ans[3];
-int val(int N, int Sx, int Sy){
-    int ret = M[Sx][Sy];
-    for(int i = Sx;i<Sx+N;i++){
-        for(int j = Sy; j<Sy+N;j++)
-            if(ret != M[i][j]) return -2;
+int paper[2200][2200];
+int cnt[3];
+int dx[] = {0, 0, 0, 1, 1, 1, 2, 2, 2 };
+int dy[] = {0, 1, 2, 0, 1, 2, 0, 1, 2 };
+int chk(int x, int y, int N){
+    int base = paper[x][y];
+    for(int i = x; i < x + N; i++){
+        for(int j = y; j < y + N; j++)
+            if(base != paper[i][j]) return 0;
     }
-    ans[ret+1]++;
-    return ret;
+    return 1;
 }
-void DnC(int N, int Sx, int Sy){
-    if(val(N, Sx, Sy) != -2) return;
-    DnC(N/3, Sx, Sy);
-    DnC(N/3, Sx, Sy + N / 3);
-    DnC(N/3, Sx, Sy + 2 * N / 3);
-    DnC(N/3, Sx + N / 3, Sy);
-    DnC(N/3, Sx + N / 3, Sy + N / 3);
-    DnC(N/3, Sx + N / 3, Sy + 2 * N / 3);
-    DnC(N/3, Sx + 2 * N / 3, Sy);
-    DnC(N/3, Sx + 2 * N / 3, Sy + N / 3);
-    DnC(N/3, Sx + 2 * N / 3, Sy + 2 * N / 3);
-}
+void DnC(int x, int y, int ind, int N){
+    if(N == 1 || chk(x, y, N)){
+        cnt[paper[x][y] + 1]++;
+        return;
+    }
+    for(int i = 0; i < 9; i++)
+        DnC(x + dx[i] * N / 3, y + dy[i] * N / 3, i, N / 3);
+}   
+
 int main(){
-    int n;
-    scanf("%d", &n);
-    for(int i = 0 ;i < n; i++){
-        for(int j = 0 ;j < n; j ++)
-            scanf("%d", &M[i][j]);
+    int n; scanf("%d", &n);
+    for(int i = 0; i < n; i++){
+        for(int j = 0; j < n ; j++)
+            scanf("%d", &paper[i][j]);
     }
-    DnC(n, 0, 0);
-    printf("%d\n%d\n%d\n", ans[0], ans[1], ans[2]);
+    DnC(0, 0, 0, n);
+    for(int i = 0; i < 3; i++) printf("%d\n", cnt[i]);
     return 0;
 }
