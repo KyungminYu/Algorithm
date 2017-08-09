@@ -1,4 +1,4 @@
-int erase(int* A, int s, int e){
+int _erase(int* A, int s, int e){
     int len = 0;
     A[len++] = A[s];
     for(int i = s + 1; i < e; i++){
