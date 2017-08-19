@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <algorithm>
 using namespace std;
-
 int down[100000], up[100000];
-
 int _lower_bound(int* A, int s, int e, int x){
     while(s < e){  
         int mid = (s + e) / 2;
@@ -18,10 +16,8 @@ int main(){
     n /= 2;
     for(int i = 0; i < n; i++)
         scanf("%d %d", &down[i], &up[i]);
-
     sort(down, down + n);
     sort(up,   up   + n);
-
     int mmin = 1e9, count = 0;
     for(int i = 1; i <= h; i++){
         int tmp = n - _lower_bound(down, 0, n, i) 
