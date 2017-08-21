@@ -4,5 +4,5 @@ int _lower_bound(int*A, int s, int e, int x){
         if(A[mid] < x) s = mid + 1;
         else e = mid;
     }
-    return e + 1;
+    return e;
 }
