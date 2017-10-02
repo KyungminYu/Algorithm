@@ -3,7 +3,10 @@ char res[8000][8000];
 int dr[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 int dc[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 void solve(int n, int r, int c){
-	if(n == 1) return;
+	if(n == 1){
+        res[r][c]= '*';
+        return;
+    }
 	if(n == 3){
 		for(int i = 0; i < 8; i++) res[r + dr[i]][c + dc[i]] = '*';
 		return;
