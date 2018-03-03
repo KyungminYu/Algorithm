@@ -1,21 +1,26 @@
 #include <stdio.h>
 #include <vector>
+#include <queue>
 #include <algorithm>
 using namespace std;
-vector<pair<int, int> > time;
+
+vector<pair<int, int> > st;
 int main(){
 	int n; scanf("%d", &n);
 	for(int i = 0; i < n; i++){
 		int s, t; scanf("%d %d", &s, &t);
-		time.push_back({s, 1});
-		time.push_back({t, -1});
+		st.push_back({s, t});	
 	}
-	sort(time.begin(), time.end());
-	int res = 0, s = 0;
-	for(int i = 0; i < time.size(); i++){
-		res = max(res, s);
-		s += time[i].second;
+	sort(st.begin(), st.end());
+	priority_queue<int, vector<int>, greater<int>> pq;
+	pq.push(st[0].second);
+	for(int i = 1; i < n; i++){
+		int s = st[i].first;
+		int t = st[i].second;
+		if((pq.top()) <= s) pq.pop();
+		pq.push(t);
 	}
-	printf("%d", res);
+	printf("%d\n", pq.size());
+	while (!pq.empty()) pq.pop();
 	return 0;
 }
