@@ -5,7 +5,7 @@ using namespace std;
 struct _pair{
 	int val, ind;
 	_pair(){};
-	void read(int ind){
+	void read(int ind){    
 		this->ind = ind;
 		scanf("%d", &val);
 	}
