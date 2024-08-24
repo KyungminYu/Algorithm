@@ -19,3 +19,49 @@ void msort(int* A, int s, int e){
     msort(A, mid + 1, e);
     merge(A, s, mid, e);
 }
+
+vector<int> sortArray(vector<int>& nums) {
+    int size = nums.size();
+    merge_sort(nums, 0, size - 1);
+    return nums;
+}
+
+void merge(vector<int>& nums, int left, int mid, int right){
+    int lIdx = left;
+    int rIDx = mid + 1;
+    
+    int tempIdx = 0;
+    int temp[right - left + 1];
+    while (lIdx <= mid && rIDx <= right) {
+        if(nums[lIdx]<=nums[rIDx]) {
+            temp[tempIdx++] = nums[lIdx++];
+        } else {
+            temp[tempIdx++] = nums[rIDx++];
+        }
+    }
+
+    int idx = 0;
+    if (lIdx > mid) {
+        for(idx = rIDx; idx<=right; ++idx) {
+            temp[tempIdx++] = nums[idx];
+        }
+    } else{
+        for(idx = lIdx; idx <= mid; ++idx) {
+            temp[tempIdx++] = nums[idx];
+        }
+    }
+
+    for(idx = left; idx <= right; ++idx){
+        nums[idx] = temp[idx - left];
+    }
+}
+
+void merge_sort(vector<int>& nums, int left, int right) {
+    if (right <= left) {
+        return;
+    }
+    int mid = (left + right) / 2;
+    merge_sort(nums, left, mid);
+    merge_sort(nums, mid + 1, right);
+    merge(nums, left, mid, right);
+}
