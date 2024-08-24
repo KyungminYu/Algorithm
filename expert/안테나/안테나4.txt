@@ -1,0 +1,163 @@
+#define ABS(x) (((x)<0)?(-(x)):(x))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+
+static const int WORLD_SIZE = 50;
+static const int NUM_AT = 50;
+static const int MAX_CAPACITY = 75;
+static const int NUM_UE = 2500;
+
+extern int get_distance(int y1, int x1, int y2, int x2);
+
+int ueIdxs[NUM_UE];
+int ueValue[NUM_UE];
+int ueDensity[NUM_UE];
+int* at_y, * at_x, * ue_y, * ue_x;
+
+void mergeSort(int l, int r) {
+    if (r <= l) {
+        return;
+    }
+    int m = (l + r) / 2;
+    mergeSort(l, m);
+    mergeSort(m + 1, r);
+
+    int lIdx = l;
+    int rIdx = m + 1;
+    int idx = 0;
+    int* tmp = new int[r - l + 1];
+    while (lIdx <= m && rIdx <= r) {
+        if (ueDensity[ueIdxs[lIdx]] != ueDensity[ueIdxs[rIdx]]) {
+            if (ueDensity[ueIdxs[lIdx]] < ueDensity[ueIdxs[rIdx]])
+                tmp[idx++] = ueIdxs[lIdx++];
+            else
+                tmp[idx++] = ueIdxs[rIdx++];
+        }
+        else {
+            if (ueValue[ueIdxs[lIdx]] < ueValue[ueIdxs[rIdx]])
+                tmp[idx++] = ueIdxs[lIdx++];
+            else
+                tmp[idx++] = ueIdxs[rIdx++];
+        }
+
+    }
+    while (lIdx <= m) tmp[idx++] = ueIdxs[lIdx++];
+    while (rIdx <= r) tmp[idx++] = ueIdxs[rIdx++];
+     
+    for (idx = l; idx <= r; ++idx) ueIdxs[idx] = tmp[idx - l];
+    delete[] tmp;
+}
+
+bool isFirstSolve;
+int atmap[WORLD_SIZE][WORLD_SIZE];
+
+void init(int base_y[], int base_x[]) {
+    at_y = base_y;
+    at_x = base_x;
+    isFirstSolve = true;
+    for (int i = 0; i < WORLD_SIZE; ++i) {
+        for (int j = 0; j < WORLD_SIZE; ++j) {
+            atmap[i][j] = 0;
+        }
+    }
+    for (int i = 0; i < NUM_AT; ++i) {
+        ++atmap[at_y[i]][at_x[i]];
+    }
+}
+
+static const int NUM_DIR = 8;
+static const int dy[NUM_DIR] = { 1, -1, 0, 0, 2, -2, 0, 0 };
+static const int dx[NUM_DIR] = { 0, 0, 1, -1, 0, 0, 2, -2 };
+
+int getDensity(int ueIdx) {
+    int density = 0;
+    int range = WORLD_SIZE / 6;
+    for (int range_y = -range; range_y <= range; ++range_y) {
+        for (int range_x = -range; range_x <= range; ++range_x) {
+            int y = ue_y[ueIdx] + range_y;
+            int x = ue_x[ueIdx] + range_x;
+            if (WORLD_SIZE <= y || y < 0 || WORLD_SIZE <= x || x < 0) continue;
+            density += atmap[y][x];
+        }
+    }
+    return density;
+}
+
+int base_count[NUM_AT];
+
+void firstSolve(int terminal_y[], int terminal_x[], int base_range[], int terminal_to_base[]) {
+    ue_y = terminal_y;
+    ue_x = terminal_x;
+    for (int atIdx = 0; atIdx < NUM_AT; ++atIdx) {
+        base_range[atIdx] = 0;
+        base_count[atIdx] = 0;
+    }
+    for (int ueIdx = 0; ueIdx < NUM_UE; ++ueIdx) {
+        ueIdxs[ueIdx] = ueIdx;
+        ueValue[ueIdx] = ue_y[ueIdx] + ue_x[ueIdx];
+        ueDensity[ueIdx] = getDensity(ueIdx);
+    }
+    mergeSort(0, NUM_UE - 1);
+
+    for (int i = 0; i < NUM_UE; ++i) {
+        int ueIdx = ueIdxs[i];
+        int minDist = WORLD_SIZE * WORLD_SIZE;
+        int minAtIdx = -1;
+        for (int atIdx = 0; atIdx < NUM_AT; ++atIdx) {
+            if (MAX_CAPACITY <= base_count[atIdx]) continue;
+            int dist = get_distance(ue_y[ueIdx], ue_x[ueIdx], at_y[atIdx], at_x[atIdx]);
+            for (int d = 0; d < NUM_DIR; ++d) {
+                int moved_ue_y = ue_y[ueIdx] + dy[d];
+                int moved_ue_x = ue_x[ueIdx] + dx[d];
+                if (WORLD_SIZE <= moved_ue_y || moved_ue_y < 0 || WORLD_SIZE <= moved_ue_x || moved_ue_x < 0) continue;
+                dist = MAX(get_distance(moved_ue_y, moved_ue_x, at_y[atIdx], at_x[atIdx]), dist);
+            }
+
+            if (dist < minDist) {
+                minDist = dist;
+                minAtIdx = atIdx;
+            }
+        }
+        terminal_to_base[ueIdx] = minAtIdx;
+        base_range[minAtIdx] = MAX(minDist, base_range[minAtIdx]);
+        ++base_count[minAtIdx];
+    }
+    isFirstSolve = false;
+}
+
+void normalSolve(int terminal_y[], int terminal_x[], int base_range[], int terminal_to_base[]) {
+    int changedUeIdx[NUM_UE];
+    int changedUeCount = 0;
+    for (int idx = 0; idx < NUM_UE; ++idx) {
+        if (terminal_y[idx] != ue_y[idx] || terminal_x[idx] != ue_x[idx]) {
+            changedUeIdx[changedUeCount++] = idx;
+        }
+    }
+    //for (int i = 0; i < NUM_UE; ++i) {
+    //    int ueIdx = ueIdxs[i];
+    //    int minDist = WORLD_SIZE * WORLD_SIZE;
+    //    int minAtIdx = -1;
+    //    for (int atIdx = 0; atIdx < NUM_AT; ++atIdx) {
+    //        if (MAX_CAPACITY <= base_count[atIdx]) continue;
+    //        int dist = get_distance(ue_y[ueIdx], ue_x[ueIdx], at_y[atIdx], at_x[atIdx]);
+    //        for (int d = 0; d < NUM_DIR; ++d) {
+    //            int moved_ue_y = ue_y[ueIdx] + dy[d];
+    //            int moved_ue_x = ue_x[ueIdx] + dx[d];
+    //            if (WORLD_SIZE <= moved_ue_y || moved_ue_y < 0 || WORLD_SIZE <= moved_ue_x || moved_ue_x < 0) continue;
+    //            dist = MAX(get_distance(moved_ue_y, moved_ue_x, at_y[atIdx], at_x[atIdx]), dist);
+    //        }
+
+    //        if (dist < minDist) {
+    //            minDist = dist;
+    //            minAtIdx = atIdx;
+    //        }
+    //    }
+    //    terminal_to_base[ueIdx] = minAtIdx;
+    //    base_range[minAtIdx] = MAX(minDist, base_range[minAtIdx]);
+    //    ++base_count[minAtIdx];
+    //}
+}
+
+void solve(int terminal_y[], int terminal_x[], int base_range[], int terminal_to_base[]) {
+    if (isFirstSolve) firstSolve(terminal_y, terminal_x, base_range, terminal_to_base);
+    else normalSolve(terminal_y, terminal_x, base_range, terminal_to_base);
+} 

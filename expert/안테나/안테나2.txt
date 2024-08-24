@@ -1,0 +1,215 @@
+#define ABS(x) (((x)<0)?(-(x)):(x))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+
+static const int WORLD_SIZE = 50;
+static const int NUM_AT = 50;
+static const int MAX_CAPACITY = 74;
+static const int NUM_UE = 2500;
+
+extern int get_distance(int y1, int x1, int y2, int x2);
+
+
+template<typename T>
+void _swap(T& e1, T& e2) {
+    T tmp = e1; e1 = e2; e2 = tmp;
+}
+
+template<typename T>
+class _priority_queue {
+private:
+    T* pq;
+    int _size;
+    int _cap;
+public:
+    _priority_queue<T>() : _priority_queue<T>(2) {
+    };
+    _priority_queue<T>(int cap) : _size(0), _cap(cap) {
+        pq = new T[_cap];
+    };
+    ~_priority_queue<T>() {
+        delete[] pq;
+    }
+    int size() { return _size; }
+    int full() { return _size == _cap - 1; }
+    int empty() { return _size == 0; }
+    T top() { return pq[0]; }
+    void push(T e) {
+        if (full()) return;
+        pq[_size] = e;
+        int cur = _size;
+        while (0 < cur && pq[cur] < pq[(cur - 1) / 2]) {
+            _swap(pq[cur], pq[(cur - 1) / 2]);
+            cur = (cur - 1) / 2;
+        }
+        ++_size;
+    }
+
+    int pop() {
+        if (empty()) return 0;
+        pq[0] = pq[--_size];
+        int cur = 0;
+        while (cur * 2 + 1 < _size) {
+            int child;
+            if (cur * 2 + 2 == _size) {
+                child = cur * 2 + 1;
+            }
+            else {
+                if (pq[cur * 2 + 1] < pq[cur + 2 + 2]) {
+                    child = cur * 2 + 1;
+                }
+                else {
+                   child = cur * 2 + 2;
+                }
+            }
+            if (pq[cur] < pq[child]) {
+                break;
+            }
+            _swap(pq[cur], pq[child]);
+            cur = child;
+        }
+        return _size;
+    }
+};
+
+struct antenna {
+    int idx;
+    int range;
+    int density;
+    int pairCount;
+
+    bool canPair() {
+        return pairCount < MAX_CAPACITY;
+    }
+
+    bool operator < (const antenna& lhs) {
+        if (range != lhs.range) {
+            return range < lhs.range;
+        }
+        if (density != lhs.density) {
+            return density < lhs.density;
+        }
+        if (pairCount != lhs.pairCount) {
+            return pairCount < lhs.pairCount;
+        }
+        return idx < lhs.idx;
+    }
+};
+
+struct pairInfo {
+    int atIdx;
+    int ueIdx;
+    int distance;
+    bool operator < (const pairInfo& lhs) {
+        if (distance != lhs.distance) {
+            return distance < lhs.distance;
+        }
+        if (atIdx != lhs.atIdx) {
+            return atIdx < lhs.atIdx;
+        }
+        return ueIdx < lhs.ueIdx;
+    }
+};
+
+int* at_y, * at_x, * ue_y, * ue_x;
+
+int atmap[WORLD_SIZE][WORLD_SIZE];
+
+void initAtmap() {
+    for (int i = 0; i < WORLD_SIZE; ++i) {
+        for (int j = 0; j < WORLD_SIZE; ++j) {
+            atmap[i][j] = 0;
+        }
+    }
+    for (int i = 0; i < NUM_AT; ++i) {
+        ++atmap[at_y[i]][at_x[i]];
+    }
+}
+
+_priority_queue<antenna> *atpq;
+void init(int base_y[], int base_x[]) {
+    at_y = base_y;
+    at_x = base_x;
+    initAtmap();
+}
+
+void initAtpq() {
+    atpq = new _priority_queue<antenna>(NUM_AT);
+    int densityRange = 5;
+    for (int i = 0; i < NUM_AT; ++i) {
+        antenna at;
+        at.idx = i;
+        at.range = 0;
+        at.density = 0;
+        at.pairCount = 0;
+        for (int j = -densityRange; j <= densityRange; ++j) {
+            for (int k = -densityRange; k <= densityRange; ++k) {
+                int y = at_y[i] + j;
+                int x = at_x[i] + k;
+                if (y < 0 || x < 0 || WORLD_SIZE <= y || WORLD_SIZE <= x) {
+                    continue;
+                }
+                at.density += atmap[y][x];
+            }
+        }
+        atpq->push(at);
+    }
+}
+
+void releaseAtpq() {
+    delete atpq;
+}
+
+_priority_queue<pairInfo>* pairpqs[NUM_UE];
+
+void initPairpq(int idx) {
+    pairpqs[idx] = new _priority_queue<pairInfo>(NUM_UE);
+    for (int i = 0; i < NUM_UE; ++i) {
+        pairInfo p;
+        p.atIdx = idx;
+        p.ueIdx = i;
+        p.distance = get_distance(at_y[p.atIdx], at_x[p.atIdx], ue_y[p.ueIdx], ue_x[p.ueIdx]) + 4 * (2 + ABS(at_y[p.atIdx] - ue_y[p.ueIdx]) + ABS(at_x[p.atIdx] - ue_x[p.ueIdx]));
+        pairpqs[idx]->push(p);
+    }
+}
+
+void initPairpq() {
+    for (int i = 0; i < NUM_AT; ++i) {
+        initPairpq(i);
+    }
+}
+
+void releasePairpq() {
+    for (int i = 0; i < NUM_AT; ++i) {
+        delete pairpqs[i];
+    }
+}
+
+bool isPaired[NUM_UE];
+
+void initIsPaired() {
+    for (int i = 0; i < NUM_UE; ++i) {
+        isPaired[i] = false;
+    }
+}
+
+void solve(int terminal_y[], int terminal_x[], int base_range[], int terminal_to_base[]) {
+    ue_y = terminal_y;
+    ue_x = terminal_x;
+    initAtpq();
+    initPairpq();
+    initIsPaired();
+
+    while (!atpq->empty()) {
+        antenna at = atpq->top();
+        atpq->pop();
+        int atIdx = at.idx;
+        if (pairpqs[atIdx]->empty()) {
+            continue;
+        }
+        pairInfo p = pairpqs[atIdx]->top();
+        pairpqs[atIdx]->pop();
+        int ueIdx = p.ueIdx;
+        if (isPaired[ueIdx]) {
+            atpq->push(at);
+            continue;
+        }

@@ -1,0 +1,236 @@
+#define ABS(x) (((x)<(0)) ? -(x) : (x))
+#define UE_NUM (2500)
+#define ANT_NUM (50)
+#define ANT_CAPA (75)
+#define MAP_NUM (50)
+#define CONFLICT (-1)
+#define INIT (5)
+ 
+extern int get_distance(int y1, int x1, int y2, int x2);
+ 
+struct Coordinate {
+    int y;
+    int x;
+};
+ 
+struct Antenna {
+    int antID;
+    Coordinate coord;
+ 
+    bool operator<(const Antenna& ant) {
+        return coord.y + coord.x < ant.coord.y + ant.coord.x;
+    }
+} antennaList[ANT_NUM], AT[ANT_NUM];
+ 
+struct UE {
+    int ueID;
+    Coordinate coord;
+ 
+    bool operator<(const UE& ue) {
+        return coord.y + coord.x < ue.coord.y + ue.coord.x;
+    }
+} ueList[UE_NUM], UT[UE_NUM];
+ 
+Coordinate beforeUE[UE_NUM];
+int ueDir[UE_NUM];
+int antCapa[ANT_NUM];
+int dy[5] = { 0,1,0,-1,0 };
+int dx[5] = { 0,0,1,0,-1 };
+bool scanFlag;
+ 
+int max(int x, int y) {
+    return x > y ? x : y;
+}
+ 
+void sortByAntenna(int l, int r) {
+    if (l == r)
+        return;
+    int m = (l + r) >> 1;
+    int ll = l, lr = m, rl = m + 1, rr = r;
+    int idx = l;
+ 
+    sortByAntenna(l, m); 
+    sortByAntenna(m + 1, r);
+    while (ll <= lr && rl <= rr) {
+        if (antennaList[ll] < antennaList[rl])
+            AT[idx++] = antennaList[ll++];
+        else
+            AT[idx++] = antennaList[rl++];
+    }
+    while (ll <= lr)
+        AT[idx++] = antennaList[ll++];
+    while (rl <= rr)
+        AT[idx++] = antennaList[rl++];
+    for (int i = l; i <= r; i++)
+        antennaList[i] = AT[i];
+}
+ 
+void sortByUE(int l, int r) {
+    if (l == r)
+        return;
+    int m = (l + r) >> 1;
+    int ll = l, lr = m, rl = m + 1, rr = r;
+    int idx = l;
+ 
+    sortByUE(l, m);
+    sortByUE(m + 1, r);
+    while (ll <= lr && rl <= rr) {
+        if (ueList[ll] < ueList[rl])
+            UT[idx++] = ueList[ll++];
+        else
+            UT[idx++] = ueList[rl++];
+    }
+    while (ll <= lr)
+        UT[idx++] = ueList[ll++];
+    while (rl <= rr)
+        UT[idx++] = ueList[rl++];
+    for (int i = l; i <= r; i++)
+        ueList[i] = UT[i];
+}
+ 
+void init(int base_y[], int base_x[]) {
+    for (int i = 0; i < ANT_NUM; i++) {
+        antennaList[i] = { i, {base_y[i], base_x[i]} };
+    }
+    sortByAntenna(0, ANT_NUM - 1);
+    scanFlag = 0;
+    ueDir[0] = INIT;
+}
+ 
+bool isIn(int y, int x) {
+    return y >= 0 && y < MAP_NUM && x >= 0 && x < MAP_NUM;
+}
+ 
+void setDirection(int terminal_y[], int terminal_x[]) {
+    Coordinate path[2];
+    Coordinate cur;
+    int dir;
+ 
+    for (int i = 0; i < UE_NUM; i++) {
+        int mark = 0;
+ 
+        path[0] = beforeUE[i];
+        path[1] = {terminal_y[i], terminal_x[i]};
+        ueDir[i] = 0;
+        for (int j = 1; j <= 4; j++) {
+            cur = path[0];
+            for (int k = 0; k < 2; k++) {
+                dir = j;
+                if (!isIn(cur.y + dy[dir], cur.x + dx[dir])) {
+                    dir = (dir + 2) == 4 ? 4 : (dir + 2) % 4;
+                }
+                cur.y += dy[dir];
+                cur.x += dx[dir];
+            }
+            if (cur.y == path[1].y && cur.x == path[1].x) {
+                ueDir[i] = j;
+                mark++;
+            }
+        }
+        if (mark > 1) 
+            ueDir[i] = CONFLICT;
+    }
+}
+ 
+int getDist(Coordinate ant, Coordinate ue, int ueDir) {
+    int dist = get_distance(ant.y, ant.x, ue.y, ue.x);
+ 
+    if (ueDir == 0)
+        return dist;
+    for (int i = 0; i < 2; i++) {
+        if (!isIn(ue.y + dy[ueDir], ue.x + dx[ueDir])) {
+            ueDir = (ueDir + 2) == 4 ? 4 : (ueDir + 2) % 4;
+        }
+        ue.y += dy[ueDir];
+        ue.x += dx[ueDir];
+        dist = max(dist, get_distance(ant.y, ant.x, ue.y, ue.x));
+    }
+    return dist;
+}
+ 
+void firstScan(int range[], int UE_alloc[]) {
+    int bestIdx;
+    int minDist, dist;
+     
+    for (int i = 0; i < ANT_NUM; i++)
+        range[i] = antCapa[i] = 0;
+    for (int i = 0; i < UE_NUM; i++) {
+        int ueID = ueList[i].ueID;
+        Coordinate ue = ueList[i].coord;
+ 
+        bestIdx = -1;
+        minDist = 1e9;
+        for (int j = 0; j < ANT_NUM; j++) {
+            int antID = antennaList[j].antID;
+            Coordinate ant = antennaList[j].coord;
+ 
+            if (antCapa[antID] == ANT_CAPA)
+                continue;
+            dist = 0;
+            for (int dir = 0; dir <= 4; dir++) {
+                dist = max(dist, getDist(ant, ue, dir));
+            }
+            if (dist < minDist) {
+                minDist = dist;
+                bestIdx = antID;
+            }
+        }
+        antCapa[bestIdx]++;
+        UE_alloc[ueID] = bestIdx;
+        range[bestIdx] = max(range[bestIdx], minDist);
+    }
+}
+ 
+void nonFirstScan(int range[], int UE_alloc[]) {
+    int bestIdx;
+    int minDist, dist;
+ 
+    for (int i = 0; i < ANT_NUM; i++)
+        range[i] = antCapa[i] = 0;
+    for (int i = 0; i < UE_NUM; i++) {
+        int ueID = ueList[i].ueID;
+        Coordinate ue= ueList[i].coord;
+ 
+        bestIdx = -1;
+        minDist = 1e9;
+        for (int j = 0; j < ANT_NUM; j++) {
+            int antID = antennaList[j].antID;
+            Coordinate ant = antennaList[j].coord;
+ 
+            if (antCapa[antID] == ANT_CAPA)
+                continue;
+            if (ueDir[ueID] == CONFLICT) {
+                dist = 0;
+                for (int dir = 0; dir <= 4; dir++) {
+                    dist = max(dist, getDist(ant, ue, dir));
+                }
+            }
+            else dist = getDist(ant, ue, ueDir[ueID]);
+            if (dist < minDist) {
+                minDist = dist;
+                bestIdx = antID;
+            }
+        }
+        antCapa[bestIdx]++;
+        UE_alloc[ueID] = bestIdx;
+        range[bestIdx] = max(range[bestIdx], minDist);
+    }
+}
+ 
+void solve(int terminal_y[], int terminal_x[], int base_range[], int terminal_to_base[]) {
+    for (int i = 0; i < UE_NUM; i++)
+        ueList[i] = { i, {terminal_y[i], terminal_x[i]} };
+    sortByUE(0, UE_NUM - 1);
+ 
+    if (!scanFlag) {
+        for (int i = 0; i < UE_NUM; i++)
+            beforeUE[i] = { terminal_y[i], terminal_x[i] };
+        firstScan(base_range, terminal_to_base);
+        scanFlag = true;
+    }
+    else {
+        if (ueDir[0] == INIT)
+            setDirection(terminal_y, terminal_x);
+        nonFirstScan(base_range, terminal_to_base);
+    }
+}

@@ -1,0 +1,108 @@
+#define lld long long
+#define min(a, b) (a < b ? a : b)
+#define max(a, b) (a < b ? b : a)
+
+lld unit[8]{ 50000, 10000, 5000, 1000, 500, 100, 50, 10 };
+lld requiredUnit[8];
+
+lld this_money[8];
+lld priority[1000];
+lld sortedIdx[1000];
+
+void save(int money[8]) {
+    for (int c = 0; c < 8; ++c) {
+        this_money[c] = money[c];
+    }
+}
+
+void initWithdraw(int result[1000][8]) {
+    for (int i = 0; i < 1000; ++i) {
+        sortedIdx[i] = i;
+        priority[i] = 0;
+        for (int c = 0; c < 8; ++c) {
+            result[i][c] = 0;
+        }
+    }
+}
+
+void countRequiredUnit(int account[1000]) {
+    for (int c = 0; c < 8; ++c) {
+        requiredUnit[c] = 0;
+    }
+
+    for (int i = 0; i < 1000; ++i) {
+        lld currAccount = account[i];
+        for (int c = 0; c < 8 && 0 < currAccount; ++c) {
+            requiredUnit[c] += (currAccount / unit[c]);
+            currAccount %= unit[c];
+        }
+    }
+}
+
+void calculatePriority(int account[1000]) {
+    for (int i = 0; i < 1000; ++i) {
+        priority[i] = 0;
+    }
+
+    lld lack[8] = { 0 };
+    lld carry[8] = { 0 };
+
+    for (int c = 7; c >= 0; --c) {
+        lack[c] = max(requiredUnit[c] - (this_money[c] + carry[c]), 0);
+        if (c > 0 && requiredUnit[c] < this_money[c] + carry[c]) {
+            carry[c - 1] = (this_money[c] + carry[c] - requiredUnit[c]) / (unit[c - 1] / unit[c]);
+        }
+    }
+
+    for (int i = 0; i < 1000; ++i) {
+        lld currAccount = account[i];
+        for (int c = 0; c < 8 && 0 < currAccount; ++c) {
+            priority[i] += (currAccount * lack[c] * lack[c] / unit[c]);
+            currAccount %= unit[c];
+        }
+    }
+}
+
+void sortIdxByPriority() {
+    for (int i = 0; i < 1000; ++i) {
+        for (int j = i + 1; j < 1000; ++j) {
+            if (priority[sortedIdx[i]] < priority[sortedIdx[j]]) {
+                continue;
+            }
+            lld tmp = sortedIdx[i];
+            sortedIdx[i] = sortedIdx[j];
+            sortedIdx[j] = tmp;
+        }
+    }
+}
+
+void withdrawAccount(int idx, int account[1000], int result[1000][8]) {
+    lld currAccount = account[idx];
+
+    for (int c = 0; c < 8 && 0 < currAccount; ++c) {
+        result[idx][c] = currAccount / unit[c];
+        if (this_money[c] < result[idx][c]) {
+            result[idx][c] = 0;
+        }
+        this_money[c] -= result[idx][c];
+        currAccount %= unit[c];
+    }
+
+    if (currAccount > 0) {
+        for (int c = 0; c < 8; ++c) {
+            this_money[c] += result[idx][c];
+            result[idx][c] = 0;
+        }
+    }
+    account[idx] = 0;
+}
+
+void withdraw(int account[1000], int result[1000][8]) {
+    initWithdraw(result);
+    countRequiredUnit(account);
+    calculatePriority(account);
+    sortIdxByPriority();
+    for (int i = 0; i < 1000; ++i) {
+        withdrawAccount(sortedIdx[i], account, result);
+    }
+}
