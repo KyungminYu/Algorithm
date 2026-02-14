@@ -25,6 +25,17 @@ This reduces the exponent by half each step,
 so the time complexity is O(log n) with O(log n) recursion depth.
 
 #### MY solution
+
+I used exponentiation by squaring with divide and conquer.
+If n is negative, I convert it into a positive exponent by setting x = 1 / x, and n = -n
+
+Then I recursively, compute half = x ^ (n / 2)
+If n is even, the answer is half * half. if it is odd, the answer is half * half * x.
+
+This reduce the exponent by half each step, so the time complexity is O(log n) with O(long n) recursion depth. 
+
+-----------------------------------------------------------------------------------
+
 To resolve this problem, I used divide and conquer approach.
 
 If I multiply all x sequentially, I might be TLE.
