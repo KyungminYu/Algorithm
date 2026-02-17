@@ -22,5 +22,13 @@ class Solution:
 I used dynamic programming.
 
 To solve this problem. 
-First, I check s is start with '0' and in this case, I return 0.
-O
+I defined dp array that meant the number of ways to decode end with i th string
+It is basically filled with 0. and set dp[0] and dp[1] as a 1.
+
+For each iteration if some condition is fulfilled, dp[i - 1] and dp[i - 2] will be added.
+: num1 that made by s[i - 2: i] is the value between 10 and 26.
+: num2 that made by s[i - 1] is not 0.
+
+After end of the loop, I return dp[len(s)]
+
+This logic's time complexity is O(n) and space complexity
