@@ -13,6 +13,25 @@ class Solution:
             res = max(res, current_max)
         return res
 ```
+
+```
+class Solution:
+    def maxProduct(self, nums: List[int]) -> int:
+        n = len(nums)
+        dp_max = [0] * n
+        dp_min = [0] * n
+        dp_max[0] = nums[0]
+        dp_min[0] = nums[0]
+        res = nums[0]
+
+        for i in range(1, n):
+            x = nums[i]
+            dp_max[i] = max(x, x * dp_max[i - 1], x * dp_min[i - 1])
+            dp_min[i] = min(x, x * dp_max[i - 1], x * dp_min[i - 1])
+            res = max(res, dp_max[i])
+        return res
+```
+
 ### GPT revised
 
 I used dynamic programming with rolling variables.
