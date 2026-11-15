@@ -19,3 +19,18 @@ class Solution:
             self.solve(target - combi, combi, res, combination, validNum)
             validNum[combi] += 1
             combination.pop()
+
+    # I use backtracking.
+    # Starting from start, I add each valid candidate and recursively search with the reduced target.
+    # I reuse the same index because each candidate can be selected multiple times.
+    # The time complexity is exponential, and the recursion depth is O(target / min(candidates)).
+
+    # def solve(self, curIdx: int, remain: int, candi: list):
+    #     if remain == 0:
+    #         res.append(candi[:])
+    #         return
+    #     for idx in range(curIdx, len(candidates)):
+    #         val = candidates[idx]
+    #         if remain - val < 0:
+    #             continue
+    #         self.solve(idx, remain - val, candi + [val])
