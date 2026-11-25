@@ -1,5 +1,37 @@
 ```
 class Solution:
+    def spiralOrder(self, matrix: list[list[int]]) -> list[int]:
+        res = []
+        start = 0
+        top = 0
+        end = len(matrix[0]) - 1
+        bottom = len(matrix) - 1
+        while start <= end and top <= bottom:
+            for c in range(start, end + 1):
+                res.append(matrix[top][c])
+            top += 1
+            for r in range(top, bottom + 1):
+                res.append(matrix[r][end])
+            end -= 1
+            if not (start <= end and top <= bottom):
+                break
+            for c in range(end, start - 1, -1):
+                res.append(matrix[bottom][c])
+            bottom -= 1
+            for r in range(bottom, top - 1, -1):
+                res.append(matrix[r][start])
+            start += 1
+        return res
+```
+
+I just traverse all cells by using row and column index. 
+After every traversal, I change the boundary top, bottom, start, end
+If its boundary is invalid, I stop traversal. 
+Its time complexity is O(n * m) and space complexity is O(n * m)
+
+
+```
+class Solution:
     def spiralOrder(self, matrix: List[List[int]]) -> List[int]:
         start = 0
         end = len(matrix[0]) - 1
